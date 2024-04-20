@@ -25,7 +25,7 @@ Make our local k8s cluster multi-node. Kind creates a multi-node k8s cluster by 
 1. Create a kind cluster.
 
    ```shell
-   kind create cluster --config=cluster-config.yaml
+   kind create cluster --config=kind-cluster-config.yaml
    ```
 
 1. List all kind clusters.
@@ -103,7 +103,7 @@ Make our local k8s cluster multi-node. Kind creates a multi-node k8s cluster by 
 
 1. Create a tenant with these settings. 
 
-   ![Create minio tenant setup](images/minio-create-tenant-setup2.png)
+   ![Create minio tenant setup](images/minio-create-tenant-setup.png)
 
 1. Go to **Configure** and disable `Expose MinIO Service` and `Expose Console Service`. For now, we don't want these services exposed to the Internet.
 
@@ -137,7 +137,7 @@ Make our local k8s cluster multi-node. Kind creates a multi-node k8s cluster by 
 1. Configure aws cli for minio.
 
    ```shell
-   aws configure --profile minio
+   $ aws configure --profile minio
    AWS Access Key ID [None]: admin123
    AWS Secret Access Key [None]: admin123
    Default region name [None]: us-east-1
@@ -157,7 +157,29 @@ Make our local k8s cluster multi-node. Kind creates a multi-node k8s cluster by 
    2024-04-19 23:24:46 data
    ```
 
+### Install Postgres
+
+Using a simple helm chart for installing postgres - few configurations to tweak.
+
+1. Add helm repo:
+
+   ```shell
+   helm repo add cetic https://cetic.github.io/helm-charts
+   helm repo update
+   ```
+
+1. Install postgres via helm.
+
+   ```shell
+   helm install postgres cetic/postgresql --namespace flyte --values postgres-values.yaml
+   ```
+
+> **Note**
+> 
+> The `cetic/helm-postgresql` has been archived as of Feb 12, 2024. We are still using it as the chart is simple and more than adequate for this non-production project. Most helm charts for postgres are too complex. In the future, we may move to a different helm chart if needs arise.
+
 ## References
 
 * [AWS CLI with Minio](https://min.io/docs/minio/linux/integrations/aws-cli-with-minio.html)
 * [Kind Home Page](https://kind.sigs.k8s.io/)
+* [Cetic Postgres Hem Chart](https://github.com/cetic/helm-postgresql)
