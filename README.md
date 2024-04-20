@@ -11,6 +11,7 @@ Whenever I am new to a platform or framework, I start a git project to serve as 
 ## Recipes
 
 * [Set up flyte sandbox](setup-sandbox) - Set up and run Flyte as a sandbbox in a single (big) Docker container.
+* [Set up flyte on a local k8s cluster](k8s-setup) - Set up and run Flyte in a local multi-node k8s cluster, includes dependencies for running flyte in k8s.
 * [Flyte example project](official-example) - The official Flyte ["Getting Started"](https://docs.flyte.org/projects/cookbook/en/latest/index.html#creating-a-workflow) example code for getting started.
   * [Value passing between tasks](value-passing)
   * [Primitive passing](value-passing/primitive)
