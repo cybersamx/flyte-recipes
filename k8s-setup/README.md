@@ -128,7 +128,7 @@ Make our local k8s cluster multi-node. Kind creates a multi-node k8s cluster by 
 
 1. Log in with `admin123` and `admin123`.
 
-1. Create a bucket with the name `data`.
+1. Create 2 buckets `data` and `metadata`. 
 
 1. Click **Create** to create the bucket.
 
@@ -178,8 +178,81 @@ Using a simple helm chart for installing postgres - few configurations to tweak.
 > 
 > The `cetic/helm-postgresql` has been archived as of Feb 12, 2024. We are still using it as the chart is simple and more than adequate for this non-production project. Most helm charts for postgres are too complex. In the future, we may move to a different helm chart if needs arise.
 
+### Install Flyte
+
+We will be installing flyte using helm .
+
+1. The flyte helm values file is `flyte-values.yaml`. It is a values that is based on the original `starter.yaml` helm values file, which can be downloaded [here](https://raw.githubusercontent.com/flyteorg/flyte/master/charts/flyte-binary/values.yaml).
+
+1. Point to a helm repo, from where the flyte chart can be downloaded.
+
+   ```shell
+   helm repo add flyteorg https://flyteorg.github.io/flyte
+   ```
+   
+1. Install flyte via helm (assuming we have already created the k8s namespace `flyte`).
+
+   ```shell
+   $ helm install flyte-backend flyteorg/flyte-binary -n flyte --values flyte-values.yaml
+   $ kubectl get all -n flyte
+   ```
+
+1. Set port forwarding so that we can access flyte consoles.
+
+   ```shell
+   $ kubectl get svc -n flyte
+   NAME                                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+   flyte-backend-flyte-binary-grpc      ClusterIP   10.96.235.147   <none>        8089/TCP   22h
+   flyte-backend-flyte-binary-http      ClusterIP   10.96.189.119   <none>        8088/TCP   22h
+   flyte-backend-flyte-binary-webhook   ClusterIP   10.96.7.174     <none>        443/TCP    22h
+   $ kubectl -n flyte port-forward svc/flyte-backend-flyte-binary-http 8088:8088
+   $ kubectl -n flyte port-forward svc/flyte-backend-flyte-binary-grpc 8089:8089
+   ```
+   
+1. Download `flytectl`.
+
+   ```shell
+   brew install flyteorg/homebrew-tap/flytectl
+   ```
+
+1. Initialize `flytectl` by connecting to the flyte server on k8s.
+
+   ```shell
+   $ flytectl config init --host localhost:8088
+   $ vi ~/.flyte/config.yaml
+   admin:
+     # For GRPC endpoints you might want to use dns:///flyte.myexample.com
+     endpoint: dns:///localhost:8089  # The grpc host 
+     insecure: true  # Change it to true as we don't have tls set up.
+   ```
+
+1. Run a test workflow.
+
+   ```shell
+   $ # Leave this project directory so that we can clone the repo separately.
+   $ git clone https://github.com/flyteorg/flytesnacks
+   $ cd flytesnacks
+   $ python3 -m venv .venv
+   $ source .venv/bin/activate
+   $ pip install flytekit
+   $ cd examples/baiscs
+   $ pyflyte run --remote basics/hello_world.py hello_world_wf
+   ```
+
+1. Launch a web browser and navigate to <http://localhost:8088/console>.
+
+
+### Clean-up
+
+1. Uninstall flyte.
+
+   ```shell
+   helm uninstall flyte-backend -n flyte
+   ```
+
 ## References
 
 * [AWS CLI with Minio](https://min.io/docs/minio/linux/integrations/aws-cli-with-minio.html)
 * [Kind Home Page](https://kind.sigs.k8s.io/)
 * [Cetic Postgres Hem Chart](https://github.com/cetic/helm-postgresql)
+* [Flyte the Hard Way](https://github.com/davidmirror-ops/flyte-the-hard-way/blob/main/docs/on-premises/single-node/002-single-node-onprem-install.md)

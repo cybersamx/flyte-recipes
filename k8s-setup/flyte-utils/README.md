@@ -29,6 +29,7 @@ This is a Docker image that designed to be run interactively in a k8s cluster ru
    kubectl run shell --rm -it --image cybersamx/flyte-utils -- bash
    root@shell:~# aws --endpoint-url http://10.96.132.61 s3 ls
    2024-04-20 06:24:46 data
+   2024-04-20 19:35:51 metadata
    root@shell:~#
    root@shell:~# psql -h 10.96.184.240 -U postgres -d postgres
    Password for user postgres:
