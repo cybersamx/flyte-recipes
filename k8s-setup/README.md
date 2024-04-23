@@ -10,7 +10,7 @@ Install
 
 ## Setup
 
-Run Docker Desktop with Kubernetes enabled.
+Run Docker Desktop without k8s enabled. We will use kind as our k8s engine.
 
 ### Install Kind
 
@@ -34,155 +34,67 @@ Make our local k8s cluster multi-node. Kind creates a multi-node k8s cluster by 
    kind get clusters
    ```
 
-1. Delete a kind cluster.
+> **Note**
+>
+> To delete a kind cluster.
+> 
+> ```shell
+> kind delete cluster --name kind
+> ```
+
+
+### Create Namespace
+
+1. Create namespace `flyte` to put the flyte application and its dependencies.
 
    ```shell
-   kind delete cluster --name kind
+   kubectl create ns flyte
    ```
+
+
+### Install Postgres
+
+
+1. Install postgres.
+
+
+   ```shell
+   kubectl apply -f postgres.yaml
+   kubectl get all -n flyte
+   ```
+
+1. Verify that postgres is installed by setting port forwarding for the postgres service and then running psql.
+
+
+   ```shell
+   kubectl port-forward svc/postgres 5432:5432 -n flyte
+   psql -h localhost -U flyte -d flyte
+   ```
+
 
 ### Install Minio
 
-1. Switch to the right k8s cluster.
+1. Install minio.
+
 
    ```shell
-   $ kubectl config use-context kind-kind
-   $ kubectl config current-context
-   kind-kind
-   ```
-   
-1. Install krew.
-
-   ```shell
-   brew install krew
-   ```
-   
-   Add the following and then source the shell config file.
-
-   ```shell
-   export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
-   ```
-   
-1. Update kew with the latest plug-ins.
-
-   ```shell
-   $ kubectl krew update
-   $ kubectl krew install minio
-   $ kubectl minio version
-   Kubectl-Plugin Version: v5.0.14
+   kubectl apply -f minio.yaml
+   kubectl get all -n flyte
    ```
 
-1. Install minio operator.
+1. Verify that minio is installed by setting port forwarding for the minio service.
+
 
    ```shell
-   $ kubectl minio init -o > minio-manifest.yaml
-   $ vi minio-manifest.yaml
-   $ kubectl apply -f minio-manifest.yaml
-   ```
-
-1. Validate that minio operator is successfully installed.
-
-   ```shell
-   kubectl get all -n minio-operator
-   ```
-
-1. Set port forwarding to access minio operator web console.
-
-   ```shell
-   kubectl minio proxy
-   ```
-
-### Create a Tenant
-
-1. Create a kubernetes namespace called `flyte` to host all flyte related resources on k9s cluster.
-
-   ```shell
-   $ kubectl create ns flyte
-   ```
-
-1. Launch a web browser and navigate to <http://localhost:9090>.
-
-1. Create a tenant with these settings. 
-
-   ![Create minio tenant setup](images/minio-create-tenant-setup.png)
-
-1. Go to **Configure** and disable `Expose MinIO Service` and `Expose Console Service`. For now, we don't want these services exposed to the Internet.
-
-1. Go to **Identity Provider**. Since this is for local, non-production use, change the credentials for the admin to `admin123` and `admin123` as the Access Key and Secret Key respectively.
-
-1. Go to **Security**. Again, since this is for non-production use, disable `TLS` and `AutoCert` (for now).
-
-1. CLick **Create** to create the tenant.
-
-### Create a Bucket
-
-1. Set up port forwarding for the tenant.
-
-   ```shell
-   $ # Set the local port to 9000 since minio-operator console is using 9090
-   $ kubectl port-forward svc/minio-console 9000:9090 -n flyte
-   $ # On another shell run the following
-   $ kubectl port-forward svc/minio 8000:80 -n flyte
+   kubectl port-forward svc/minio 9000:9000 9001:9001 -n flyte
    ```
 
 1. Launch a web browser and navigate to <http://localhost:9000>.
 
-1. Log in with `admin123` and `admin123`.
-
-1. Create 2 buckets `data` and `metadata`. 
-
-1. Click **Create** to create the bucket.
-
-### Test Minio
-
-1. Configure aws cli for minio.
-
-   ```shell
-   $ aws configure --profile minio
-   AWS Access Key ID [None]: admin123
-   AWS Secret Access Key [None]: admin123
-   Default region name [None]: us-east-1
-   Default output format [None]:
-   ```
-
-1. Enable aws signature version 4 for minio.
-
-   ```shell
-   aws configure set default.s3.signature_version s3v4
-   ```
-
-1. List the buckets on minio.
-
-   ```shell
-   $ aws --profile minio --endpoint-url http://localhost:8000 s3 ls
-   2024-04-19 23:24:46 data
-   ```
-
-### Install Postgres
-
-Using a simple helm chart for installing postgres - few configurations to tweak.
-
-1. Add helm repo:
-
-   ```shell
-   helm repo add cetic https://cetic.github.io/helm-charts
-   helm repo update
-   ```
-
-1. Install postgres via helm.
-
-   ```shell
-   helm install postgres cetic/postgresql --namespace flyte --values postgres-values.yaml
-   ```
-
-> **Note**
-> 
-> The `cetic/helm-postgresql` has been archived as of Feb 12, 2024. We are still using it as the chart is simple and more than adequate for this non-production project. Most helm charts for postgres are too complex. In the future, we may move to a different helm chart if needs arise.
 
 ### Install Flyte
 
 We will be installing flyte using helm .
-
-1. The flyte helm values file is `flyte-values.yaml`. It is a values that is based on the original `starter.yaml` helm values file, which can be downloaded [here](https://raw.githubusercontent.com/flyteorg/flyte/master/charts/flyte-binary/values.yaml).
 
 1. Point to a helm repo, from where the flyte chart can be downloaded.
 
@@ -193,8 +105,8 @@ We will be installing flyte using helm .
 1. Install flyte via helm (assuming we have already created the k8s namespace `flyte`).
 
    ```shell
-   $ helm install flyte-backend flyteorg/flyte-binary -n flyte --values flyte-values.yaml
-   $ kubectl get all -n flyte
+   helm install flyte-backend flyteorg/flyte-binary -n flyte --values flyte-values.yaml
+   kubectl get all -n flyte
    ```
 
 1. Set port forwarding so that we can access flyte consoles.

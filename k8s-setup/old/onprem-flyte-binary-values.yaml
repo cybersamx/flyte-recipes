@@ -48,5 +48,6 @@ deployment:
 #        memory: 2Gi
 
 serviceAccount:
-  create: false
+  create: true
+
 
