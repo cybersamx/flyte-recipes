@@ -6,9 +6,12 @@ RUN set -ex; \
             awscli \
             curl \
             dnsutils \
+            iputils-ping \
             jq \
+            netcat \
             openssl \
             postgresql-client \
+            telnet \
             vim
 
 RUN mkdir -p /root/.aws

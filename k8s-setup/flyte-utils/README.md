@@ -5,7 +5,7 @@ This is a Docker image that designed to be run interactively in a k8s cluster ru
 1. Build the docker image that has python, awscli, and postgres client.
 
    ```shell
-   docker build -t cybersamx/flyte-utils -f Dockerfile .
+   docker build --platform linux/amd64 -t cybersamx/flyte-utils -f Dockerfile .
    ```
 
 1. Push the image to Docker Hub.
@@ -19,8 +19,8 @@ This is a Docker image that designed to be run interactively in a k8s cluster ru
    ```shell
    kubectl get all -n flyte
    NAME               TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)                         AGE
-service/minio      NodePort   10.96.248.252   <none>        9000:30084/TCP,9001:30088/TCP   19m
-service/postgres   NodePort   10.96.109.127   <none>        5432:30089/TCP                  20m
+   service/minio      NodePort   10.96.248.252   <none>        9000:30084/TCP,9001:30088/TCP   19m
+   service/postgres   NodePort   10.96.109.127   <none>        5432:30089/TCP                  20m
    ```
 
 1. Run flyte-utils in a k8s cluster. Once in a shell session, connect to minio and postgres.
@@ -36,6 +36,17 @@ service/postgres   NodePort   10.96.109.127   <none>        5432:30089/TCP      
    Type "help" for help.
    flyte=#
    ```
+
+## Troubleshooting
+
+Some common commands to troubleshoot.
+
+```shell
+$ # Connect to a port
+$ nc -z -v minio.flyte.svc.cluster.local 9000
+$ # HTTP connect to a port
+$ curl -Iv http://minio.flyte.svc.cluster.local:9000
+```
 
 ## Notes
 

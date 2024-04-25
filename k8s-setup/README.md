@@ -117,10 +117,23 @@ We will be installing flyte using helm .
    flyte-backend-flyte-binary-grpc      ClusterIP   10.96.235.147   <none>        8089/TCP   22h
    flyte-backend-flyte-binary-http      ClusterIP   10.96.189.119   <none>        8088/TCP   22h
    flyte-backend-flyte-binary-webhook   ClusterIP   10.96.7.174     <none>        443/TCP    22h
-   $ kubectl -n flyte port-forward svc/flyte-backend-flyte-binary-http 8088:8088
-   $ kubectl -n flyte port-forward svc/flyte-backend-flyte-binary-grpc 8089:8089
+   $ kubectl port-forward svc/flyte-backend-flyte-binary-http 8088:8088 -n flyte
+   $ kubectl port-forward svc/flyte-backend-flyte-binary-grpc 8089:8089 -n flyte
+   $ kubectl port-forward svc/minio 9000:9000 9001:9001 -n flyte
+   ```
+ 
+1. We need the system that runs `flytectl` to resolve `minio.flyte.svc.cluster.local`. So we need to enter the host to the hosts file.
+
+   ```shell
+   sudo vi /etc/hosts
    ```
    
+   Add the following:
+
+   ```
+   127.0.0.1    minio.flyte.svc.cluster.local
+   ```
+  
 1. Download `flytectl`.
 
    ```shell
@@ -135,6 +148,7 @@ We will be installing flyte using helm .
    admin:
      # For GRPC endpoints you might want to use dns:///flyte.myexample.com
      endpoint: dns:///localhost:8089  # The grpc host 
+     authType: Pkce
      insecure: true  # Change it to true as we don't have tls set up.
    ```
 
